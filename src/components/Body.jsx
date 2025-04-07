@@ -1,5 +1,5 @@
 import React from "react"
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ClaudeRecipe from "./claudeRecipe.jsx"
 import IngredientsList from "./IngredientsList.jsx"
 import { getRecipeFromMistral} from "../../ai.js"
@@ -7,6 +7,14 @@ import { getRecipeFromMistral} from "../../ai.js"
 export default function Main() {
 
     const [ingredients, setIngredients] = useState([])
+    const [recipe, setRecipe] = useState("")
+    const recipeSection = React.useRef(null)
+
+    async function getARecipe() {
+        let recipe = await getRecipeFromMistral(ingredients)
+        recipe = "test"
+        setRecipe(recipe)
+    }
    
     function addIngredient(formData) {
         const newIngredient = formData.get("ingredient")
@@ -18,13 +26,12 @@ export default function Main() {
         )
     }
 
-    const [recipe, setRecipe] = useState("")
+    useEffect(() => {
+        if(recipeSection.current !== null) {
+            recipeSection.current.scrollIntoView({ behavior: "smooth" })
+        }
+    }, [recipe])
 
-    async function getARecipe() {
-        const recipe = await getRecipeFromMistral(ingredients)
-        setRecipe(recipe)
-    }
-    
     return (
         <main>
             <form action={addIngredient} className="add-ingredient-form"> 
@@ -37,12 +44,14 @@ export default function Main() {
                 />
                 <button>Add ingredient</button>
             </form>
-            {ingredients.length ? 
+            {ingredients.length  > 0 &&
                 <IngredientsList 
+                    ref={recipeSection}
                     getARecipe={getARecipe}
                     ingredients={ingredients}
                 />
-            : null}
+            }
+
             {recipe && 
                 <ClaudeRecipe 
                     recipe={recipe}
